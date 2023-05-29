@@ -65,4 +65,74 @@ router.get("/movies/search", async function (req, res, next) {
   }
 });
 
+router.get('/movies/data/:id', async function(req, res, next) {
+  const id = req.params.id;
+
+  try{
+    if (Object.keys(req.query).length !== 0) throw {status: 400, message: "Invalid query parameters. Query parameters are not permitted."};
+    
+    if (id.length > 9 | id.length === 0) throw {status: 400, message: "You must supply an imdbID!"};
+
+    const dataQuery = await req.db.from("basics")
+        .select("primaryTitle", "year", "runtimeMinutes", "genres", "country", "imdbRating", "rottentomatoesRating", "metacriticRating", "rated", "poster", "plot", "boxoffice")
+        .where("tconst", "=",  id)
+
+    if (Object.keys(dataQuery).length === 0) throw {status: 404, message: "No record exists of a movie with this ID"};
+
+    const principalQuery = await req.db.from("principals")
+    .select("nconst", "category", "name", "characters")
+    .where("tconst", "=",  id)
+
+    const data = dataQuery[0];
+
+    const principals = principalQuery.map(principal => { 
+      let characters = []
+      if(principal.characters != ""){
+        characters = (JSON.parse(principal.characters))
+      }
+      return {
+        id: principal.nconst,
+        category: principal.category,
+        name: principal.name,
+        characters: characters
+      }
+    })
+
+    const ratings = [];
+
+    if((data.imdbRating) !== null){
+      ratings.push({
+      source: "Internet Movie Database",
+      value: parseFloat(data.imdbRating)
+    })}
+    if(data.rottentomatoesRating !== null){
+      ratings.push({
+      source: "Rotten Tomatoes",
+      value: parseInt(data.rottentomatoesRating)
+    })}
+    if(data.metacriticRating !== null){
+      ratings.push({
+      source: "Metacritic",
+      value: parseInt(data.metacriticRating)
+    })}
+    
+    res.json({
+      title: data.primaryTitle,
+      year: data.year,
+      runtime: data.runtimeMinutes,
+      genres: data.genres.split(","),
+      country: data.country,
+      principals: principals,
+      ratings: ratings,
+      boxoffice: data.boxoffice,
+      poster: data.poster,
+      plot: data.plot
+    });
+
+  } catch (error) {
+    res.status(error.status)
+    res.send({ error: true, message: error.message });
+  }
+});
+
 module.exports = router;
