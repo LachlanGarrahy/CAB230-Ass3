@@ -57,14 +57,13 @@ router.post('/login', async function(req, res, next) {
     const passwordOK = await bcrypt.compare(password, user.hash)
     if (!passwordOK) {throw {status: 401, message: "Passwords do not match"}}
 
-    console.log("working")
 
     // Create and return JWT token
-    const bearer_expires_in = 600; // 10 minutes
+    const bearer_expires_in = !req.body.bearerExpiresInSeconds ? 600 : req.body.bearerExpiresInSeconds; // 10 minutes or whats specified
     const bearer_exp = Math.floor(Date.now() / 1000) + bearer_expires_in;
     const bearer_token = jwt.sign({ email, bearer_exp }, JWT_SECRET);
     const bearer = {
-      bearer_token,
+      token: bearer_token,
       token_type: "Bearer",
       expires_in: bearer_expires_in
     }
@@ -72,7 +71,7 @@ router.post('/login', async function(req, res, next) {
     const refresh_exp = Math.floor(Date.now() / 1000) + refresh_expires_in;
     const refresh_token = jwt.sign({ email, refresh_exp }, JWT_SECRET);
     const refresh = {
-      refresh_token,
+      token: refresh_token,
       token_type: "Refresh",
       expires_in: refresh_expires_in
     }
@@ -82,10 +81,10 @@ router.post('/login', async function(req, res, next) {
       refreshToken: refresh
     });
   } catch (error) {
-    console.log(error)
     res.status(error.status)
     res.send({ error: true, message: error.message });
   }
 });
+
 
 module.exports = router;

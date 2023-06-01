@@ -7,16 +7,21 @@ module.exports = function (req, res, next) {
         return;
     }
     const token = req.headers.authorization.replace(/^Bearer /, "");
-    try {
-        jwt.verify(token, process.env.JWT_SECRET);
-    } catch (e) {
-        if (e.name === "TokenExpiredError") {
-            res.status(401).json({ error: true, message: "JWT token has expired" });
-        } else {
-            res.status(401).json({ error: true, message: "Invalid JWT token" });
-        }
-        return;
-    }
 
-    next();
+    // Verify the token
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            // Handle token verification errors
+            return res.status(401).json({  error: true, message: "Invalid JWT token" });
+        }
+
+        // Check if the token has expired
+        if (Date.now() >= decoded.bearer_exp * 1000) {
+            return res.status(401).json({  error: true, message: "JWT token has expired" });
+        }
+
+        // Token is valid and not expired
+        req.user = decoded; // Store the decoded token payload in the request object for future use
+        next();
+    });
 };
