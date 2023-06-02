@@ -134,14 +134,17 @@ router.put('/:email/profile', authorization, async function(req, res, next) {
 
     if (typeof firstName !== 'string' || typeof lastName !== 'string' || typeof address !== 'string') { throw { status: 400, message: "Request body invalid: firstName, lastName and address must be strings only." }; }
 
-    const dateFormat = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateFormat.test(dob)) { throw { status: 400, message: "Invalid input: dob must be a real date in format YYYY-MM-DD." }; }
+    // Split the date string into year, month, and day
+    const [year, month, day] = dob.split('-');
+    
+    // Create a new Date object using the year, month, and day
+    const date = new Date(year, month - 1, day);
+
+    if (!(date.getFullYear() == year && date.getMonth() == month - 1 && date.getDate() == day)) { throw { status: 400, message: "Invalid input: dob must be a real date in format YYYY-MM-DD." }; }
 
     const parsedDate = new Date(dob);
-    if (isNaN(parsedDate)){ throw { status: 400, message: "Invalid input: dob must be a real date in format YYYY-MM-DD." }; }
-
     const currentDate = new Date();
-    if (currentDate < parsedDate) { throw { status: 400, message: "Invalid input, dob must be a date in the past." }; }
+    if (currentDate < parsedDate) { throw { status: 400, message: "Invalid input: dob must be a date in the past." }; }
 
     const rolloverCheckDate = new Date(year, month - 1, day);
     if (rolloverCheckDate.getFullYear() === dob){}
