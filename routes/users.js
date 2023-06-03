@@ -147,10 +147,7 @@ router.put('/:email/profile', authorization, async function(req, res, next) {
     const currentDate = new Date();
     if (currentDate < parsedDate) { throw { status: 400, message: "Invalid input: dob must be a date in the past." }; }
 
-    const rolloverCheckDate = new Date(year, month - 1, day);
-    if (rolloverCheckDate.getFullYear() === dob){}
-
-    const queryUsers = await req.db.from("users")
+    await req.db.from("users")
       .update({
         firstName: firstName,
         lastName: lastName,

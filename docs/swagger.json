@@ -78,13 +78,107 @@
             "example": "Invalid page format. page must be a number."
           }
         }
+      },
+      "MissingParam": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "message": {
+            "type": "string",
+            "example": "Request body incomplete: firstName, lastName, dob and address are required."
+          }
+        }
+      },
+      "NotString": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "message": {
+            "type": "string",
+            "example": "Request body invalid: firstName, lastName and address must be strings only."
+          }
+        }
+      },
+      "InvalidDob": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid input: dob must be a real date in format YYYY-MM-DD."
+          }
+        }
+      },
+      "FutureDob": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid input: dob must be a date in the past."
+          }
+        }
+      },
+      "ProfileNotMatch": {
+        "description": "The returned data if the user is not logged in or the user's bearer does not match the email of the user they are searching for",
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "jhonSmith@test"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Smith"
+          }
+        }
+      },
+      "ProfileMatch": {
+        "description": "The returned data if the users is looking for their profile",
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Smith"
+          },
+          "address": {
+            "type": "string",
+            "example": "610 Reynolds Stravenue"
+          },
+          "dob": {
+            "type": "string",
+            "example": "1970-01-01T00:00:00.000Z"
+          }
+        }
       }
     }
   },
   "paths": {
     "/movies/search": {
       "get": {
-        "tags": ["Movies"],
+        "tags": [
+          "Movies"
+        ],
         "description": "Returns a list of movie data. The list is arranged by imdbId, in ascending order.",
         "parameters": [
           {
@@ -226,7 +320,9 @@
     },
     "/movies/data/{imdbID}": {
       "get": {
-        "tags": ["Movies"],
+        "tags": [
+          "Movies"
+        ],
         "description": "Get data for a movie by imdbID",
         "operationId": "getMovieData",
         "parameters": [
@@ -266,7 +362,11 @@
                         "type": "string",
                         "example": "Action"
                       },
-                      "example": ["Action", "Adventure", "Drama"]
+                      "example": [
+                        "Action",
+                        "Adventure",
+                        "Drama"
+                      ]
                     },
                     "country": {
                       "type": "string",
@@ -297,7 +397,12 @@
                             }
                           }
                         },
-                        "required": ["id", "name", "category", "characters"]
+                        "required": [
+                          "id",
+                          "name",
+                          "category",
+                          "characters"
+                        ]
                       },
                       "example": [
                         {
@@ -310,25 +415,33 @@
                           "id": "nm0001772",
                           "category": "actor",
                           "name": "Patrick Stewart",
-                          "characters": ["Picard"]
+                          "characters": [
+                            "Picard"
+                          ]
                         },
                         {
                           "id": "nm0000408",
                           "category": "actor",
                           "name": "Jonathan Frakes",
-                          "characters": ["Riker"]
+                          "characters": [
+                            "Riker"
+                          ]
                         },
                         {
                           "id": "nm0000653",
                           "category": "actor",
                           "name": "Brent Spiner",
-                          "characters": ["Data"]
+                          "characters": [
+                            "Data"
+                          ]
                         },
                         {
                           "id": "nm0000996",
                           "category": "actor",
                           "name": "LeVar Burton",
-                          "characters": ["Geordi"]
+                          "characters": [
+                            "Geordi"
+                          ]
                         },
                         {
                           "id": "nm0734472",
@@ -455,7 +568,9 @@
     },
     "/people/{id}": {
       "get": {
-        "tags": ["People"],
+        "tags": [
+          "People"
+        ],
         "description": "Get information about a person (actor, writer, director etc.) from their IMDB ID.",
         "parameters": [
           {
@@ -609,7 +724,9 @@
     },
     "/user/register": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "description": "Creates a new user account. A request body containing the user to be registered must be sent.",
         "requestBody": {
           "description": "An object containing the email and password of the user to be registered.",
@@ -706,7 +823,9 @@
     "/user/login": {
       "post": {
         "description": "Log in to an existing user account. A request body containing the user credentials must be sent. The longExpiry bool is a setting for development use only that makes both tokens expire after a year.",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "description": "The credentials of the user to log in.",
           "required": true,
@@ -841,10 +960,223 @@
         }
       }
     },
+    "/user/{email}/profile": {
+      "get": {
+        "description": "Retrieves the first name, last name, and email of the user with the supplied email if the user is searching for someone else in the database and will additionally recieve the dob and address of the user if they are searching for themselves.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "description": "The user's email",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. Click on 'Schema' below to see the possible responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProfileNotMatch"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ProfileMatch"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Supplied email does not exist in the database",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "example": "true"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Log the user out, invalidating the refresh token",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "description": "The user's email",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "The new user data",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "example": "John"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "Smith"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "610 Reynolds Stravenue"
+                  },
+                  "dob": {
+                    "type": "string",
+                    "example": "1970-01-01T00:00:00.000Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "An object containing the updated user data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "example": "jhonSmith@test"
+                    },
+                    "firstName": {
+                      "type": "string",
+                      "example": "John"
+                    },
+                    "lastName": {
+                      "type": "string",
+                      "example": "Smith"
+                    },
+                    "dob": {
+                      "type": "string",
+                      "example": "1970-01-01T00:00:00.000Z"
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": "610 Reynolds Stravenue"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/MissingParam"
+                    },
+                    {
+                      "$ref": "#/components/schemas/NotString"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidDob"
+                    },
+                    {
+                      "$ref": "#/components/schemas/FutureDob"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. Click on 'Schema' below to see the possible error responses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/MissingAuthHeader"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TokenExpired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidJWT"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Supplied email does not match currently logged in user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "boolean",
+                      "example": "true"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/user/refresh": {
       "post": {
         "description": "Obtain a new bearer token by using a refresh token",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "description": "The refresh token",
           "required": true,
@@ -956,7 +1288,9 @@
     "/user/logout": {
       "post": {
         "description": "Log the user out, invalidating the refresh token",
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "requestBody": {
           "description": "The refresh token",
           "required": true,
