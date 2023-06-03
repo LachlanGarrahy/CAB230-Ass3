@@ -11,8 +11,9 @@ const cors = require('cors');
 const swaggerUI = require('swagger-ui-express');
 const swaggerDocument = require('./docs/swagger.json');
 
-var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var moviesRouter = require('./routes/movies');
+var peopleRouter = require('./routes/people');
 
 var app = express();
 
@@ -35,9 +36,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/', indexRouter);
+app.use('/movies', moviesRouter);
+app.use('/people', peopleRouter);
 app.use('/user', usersRouter);
-app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument))
+app.use('/', swaggerUI.serve);
+app.get('/', swaggerUI.setup(swaggerDocument));
 
 logger.token('res', (req, res) => {
   const headers = {}

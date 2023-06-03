@@ -158,15 +158,6 @@ router.put('/:email/profile', authorization, async function(req, res, next) {
       })
       .where("email", "=", email);
 
-    queryUsers
-    console.log({
-      email:email,
-      firstName: firstName,
-      lastName: lastName,
-      dob: dob,
-      address: address
-    })
-
     res.status(200).send({
       email:email,
       firstName: firstName,
@@ -185,7 +176,7 @@ router.put('/:email/profile', authorization, async function(req, res, next) {
 
 router.post('/refresh', function(req, res, next) {
   try{
-    if (!(req.body.refreshToken)){ throw {status: 400, message: "Request body incomplete - refresh token required"}}
+    if (!(req.body.refreshToken)){ throw {status: 400, message: "Request body incomplete, refresh token required"}}
     const oldRefreshToken = req.body.refreshToken
     console.log(oldRefreshToken);
 
