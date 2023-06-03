@@ -1,12 +1,10 @@
 const jwt = require('jsonwebtoken');
 module.exports = function (req, res, next) {
-    if (!("authorization" in req.headers)
-        || !req.headers.authorization.match(/^Bearer /)
-    ) {
-        res.status(401).json({ error: true, message: "Authorization header ('Bearer token') not found" });
+    if (req.body.refreshToken === null) {
+        res.status(400).json({ error: true, message: "Request body incomplete, refresh token required" });
         return;
     }
-    const token = req.headers.authorization.replace(/^Bearer /, "");
+    const token = req.body.refreshToken;
 
     // Verify the token
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
@@ -16,16 +14,15 @@ module.exports = function (req, res, next) {
         }
 
         // Check if the token has expired
-        if (Date.now() >= decoded.bearer_exp * 1000) {
+        if (Date.now() >= decoded.refresh_exp * 1000) {
             return res.status(401).json({  error: true, message: "JWT token has expired" });
         }
 
-        const user_bearer = await req.db.from("users").select("bearer").where("email", "=", decoded.email);
+        const user_refresh = await req.db.from("users").select("refresh").where("email", "=", decoded.email);
 
-        if (user_bearer[0].bearer !== token) {
+        if (user_refresh[0].refresh !== token) {
             return res.status(401).json({  error: true, message: "JWT token has expired" });
         }
-
 
         // Token is valid and not expired
         req.user = decoded; // Store the decoded token payload in the request object for future use

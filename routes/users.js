@@ -5,6 +5,7 @@ var router = express.Router();
 const bcrypt = require('bcrypt');
 const authorization = require('../middleware/authorization');
 const profileAuth = require('../middleware/profileAuth');
+const refreshAuth = require('../middleware/refreshAuth');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -168,47 +169,56 @@ router.put('/:email/profile', authorization, async function(req, res, next) {
 
 
   } catch (error) {
-    console.log(error)
     res.status(error.status).send({ error: true, message: error.message });
   }
   
 });
 
-router.post('/refresh', function(req, res, next) {
-  try{
-    if (!(req.body.refreshToken)){ throw {status: 400, message: "Request body incomplete, refresh token required"}}
-    const oldRefreshToken = req.body.refreshToken
-    console.log(oldRefreshToken);
-
-    // Create and return JWT token
-    const bearer_expires_in = 600; // 10 minutes
-    const bearer_exp = Math.floor(Date.now() / 1000) + bearer_expires_in;
-    const bearer_token = jwt.sign({ email, bearer_exp }, JWT_SECRET);
-    const bearer = {
-      token: bearer_token,
-      token_type: "Bearer",
-      expires_in: bearer_expires_in
-    }
-    const refresh_expires_in = 60*60*24; // 1 day
-    const refresh_exp = Math.floor(Date.now() / 1000) + refresh_expires_in;
-    const refresh_token = jwt.sign({ email, refresh_exp }, JWT_SECRET);
-    const refresh = {
-      token: refresh_token,
-      token_type: "Refresh",
-      expires_in: refresh_expires_in
-    }
-    res.status(200)
-    res.send({
-      bearerToken: bearer,
-      refreshToken: refresh
-    });
-  } catch (error) {
-    res.status(error.status)
-    res.send({ error: true, message: error.message });
+router.post('/refresh', refreshAuth, async function(req, res, next) {
+  // Create and return JWT token
+  const email = req.user.email
+  const bearer_expires_in = 600; // 10 minutes
+  const bearer_exp = Math.floor(Date.now() / 1000) + bearer_expires_in;
+  const bearer_token = jwt.sign({ email, bearer_exp }, JWT_SECRET);
+  const bearer = {
+    token: bearer_token,
+    token_type: "Bearer",
+    expires_in: bearer_expires_in
   }
+  const refresh_expires_in = 60*60*24; // 1 day
+  const refresh_exp = Math.floor(Date.now() / 1000) + refresh_expires_in;
+  const refresh_token = jwt.sign({ email, refresh_exp }, JWT_SECRET);
+  const refresh = {
+    token: refresh_token,
+    token_type: "Refresh",
+    expires_in: refresh_expires_in
+  }
+
+  await req.db.from("users")
+  .where("email", "=", email)
+  .update({
+    bearer: bearer_token,
+    refresh: refresh_token
+  });
+
+  res.status(200)
+  res.send({
+    bearerToken: bearer,
+    refreshToken: refresh
+  });
 });
 
-//router.post('/logout', function(req, res, next) {});
+router.post('/logout', refreshAuth, async function(req, res, next) {
+  await req.db.from("users")
+    .where("email", "=", req.user.email)
+    .update({
+      bearer: "",
+      refresh: ""
+    });
+
+  res.status(200)
+  res.send({error: false, message: "Token successfully invalidated"});
+});
 
 
 module.exports = router;
